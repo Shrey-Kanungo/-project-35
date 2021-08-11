@@ -1,5 +1,5 @@
 //Create variables here
-var dog, Happydog,dogImg;
+var dog, happydog,dogImg;
 var database
 var food, foodStock,foodImg
 
@@ -11,48 +11,85 @@ function preload()
 	//load images here
   dogImg = loadImage("images/dogImg.png");
   
-  Happydog = loadImage("images/dogImg1.png");
-  foodImg = loadImage("images/mik.jpg");
+  happydog = loadImage("images/dogImg1.png");
+  foodImg = loadImage("images/Milk.png");
 }
 
 function setup() {
   database=firebase.database();
 	createCanvas(800, 700);
+
+  foodObj = new food(); 
+
+  
+
   dog = createSprite(400,350,40,30);
   dog.addImage(dogImg);
   dog.scale = 0.19;
-  food = createSprite(250,200,20,10);
-  food.addImage(foodImg);
-  food.scale = 0.09
 
+  
+
+  feed = createButton("FEED THE DOG");
+  feed.position(700,95);
+  feed.mousePressed(feedDog);
+
+  addFood = createButton("ADD FOOD");
+  addFood.position(800,95);
+  addFood.mousePressed(addFoods)
 
 
   food=database.ref('food') ;
-  food.on("value",ReadFoodstock);
+  food.on("value",readfoodstock);
   
 }
 
 
 function draw() {  
 background(46,139,87);
-
-if (keyWentDown(UP_ARROW)){
-  writeStock(food)
-  dog.addImage("HappyDog")
+foodObj.display()
+fedTime=database.ref('FeedTime');
+  fedTime.on("value",function(data){
+    lastFed=data.val();
+  });
+fill(255,255,254);
+textSize(15);
+if(lastFed>=12){
+  text("Last Fed :"+ lastFed%12 +"PM",350,30);
+}else if(lastFed==0){
+  text("Last Fed : 12 AM",350,30);
+}else{
+  text("Last Fed :"+lastFed + "AM",350,30);
 }
   drawSprites();
   //add styles here
 
 }
 
-function ReadFoodstock(data){
-  foods = data.val();
+
+function readfoodstock(data){
+  
+  food = data.val();
+  foodObj.updateFoodStock(food);
 }
-  function writeStock(x){
+
+  function feedDog(){
+    dog.addImage(happydog);
+
+    if(foodObj.getFoodStock()<= 0){
+      foodObj.updateFoodStock(foodObj.getFoodStock()*0);
+    }else{
+      foodObj.updateFoodStock(foodObj.getFoodStock()-1);
+    }
     database.ref('/').update({
-      food : x 
+      food:foodObj.getfoodstock(),
+      FeedTime:hour()
     })
   }
 
   
-
+function addFood(){
+  food++;
+  database.ref('/').update({
+    food:food
+  })
+}
